@@ -51,7 +51,7 @@ class ThresholdFilter:
   def __init__(self, threshold):
     self.threshold = threshold
   def __call__(self, prefixCounter, suffix):
-    if prefixCounter[suffix] > self.threshold:
+    if len(prefixCounter[suffix]) > self.threshold:
        return True
     return False
 
@@ -207,11 +207,10 @@ finalPSList: Set of suffixes that are > threshold
 def doPSListFromDump(dumpFile, PSList, filterFunction):
   print('getting prefix frequencies')
   prefixCounter = getPrefixesOfSuffixList(PSList, dumpFile)
-  (prefixNumber, sortedPrefixNumber) = getFrequenciesOfPrefixesForSuffixes(prefixCounter)
   print('done')
   finalPSList = set()
   print('augment list')
-  augmentPSList(finalPSList, prefixNumber, filterFunction)
+  augmentPSList(finalPSList, prefixCounter, filterFunction)
   print('done augmenting')
   return finalPSList
 
@@ -235,7 +234,7 @@ def doPSListFromAlexa(dumpFile, PSList, filterFunction):
   prefixCounter = getPrefixesOfAlexaSuffixList(PSList, dumpFile)
   (prefixNumber, sortedPrefixNumber) = getFrequenciesOfPrefixesForSuffixes(prefixCounter) 
   finalPSList = set()
-  augmentPSList(finalPSList, prefixNumber, filterFunction)
+  augmentPSList(finalPSList, prefixCounter, filterFunction)
   return finalPSList
 
 
@@ -271,7 +270,7 @@ def doCombinedDumpAlexaList(alexaDump, mergeDump, \
                  getFrequenciesOfPrefixesForSuffixes(alexaPrefixCounter)
   finalPSList = set()
   augmentPSList(finalPSList, alexaPrefixNumber, alexaFilterFunction)
-  augmentPSList(finalPSList, prefixNumber, dumpFilterFunction)
+  augmentPSList(finalPSList, alexaPrefixCounter, dumpFilterFunction)
   return finalPSList
 
 """
@@ -279,22 +278,22 @@ function augmentPSList
 This function merges two suffix lists together subject to 
 a filter function. When the filter function returns true
 it merges, and ignores otherwise. 
-The filter function takes prefixNumber and suffix as arguments
+The filter function takes prefixCounter and suffix as arguments
 The merged result is stored in the first suffix list
 
 Arguments
 PSList: a Set of suffixes
-prefixNumber: a map of suffix => frequency
+prefixCounter: a map of suffix => frequency
 filterFunction: if filter function returns True
-                added to prefixNumber
+                added to prefixCounter
 
 Result
 Merged List is in PSList
 """
 
-def augmentPSList(PSList, prefixNumber, filterFunction):
-	for suffix in prefixNumber.keys():
-		if filterFunction(prefixNumber, suffix):
+def augmentPSList(PSList, prefixCounter, filterFunction):
+	for suffix in prefixCounter.keys():
+		if filterFunction(prefixCounter, suffix):
 			PSList.add(suffix)
 
 """
@@ -355,6 +354,7 @@ def getInitialPSList(dumpFile):
 	  # dont process IP addresses	
 		if processDump.isIp(urlDomain):
 			continue
+		urlDomain = suffixParser.get_public_suffix(urlDomain)
 		if len(urlDomain.split('.')) > currentLength:
 			PSList.add(urlDomain)
 	return PSList
