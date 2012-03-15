@@ -1,1 +1,5 @@
+This is an attempt to improve the Public Suffix List of Mozilla, by augmenting it with entries from real data.
+
+This augmented list could be useful in a variety of applications. For example we showed it was useful in a paper on web tracking detection (to be released soon). 
+
 The main file is generatepublicsuffix.py
